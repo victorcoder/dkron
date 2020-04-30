@@ -411,6 +411,10 @@ func (a *Agent) setupSerf() (*serf.Serf, error) {
 	serfConfig.UserCoalescePeriod = 3 * time.Second
 	serfConfig.UserQuiescentPeriod = time.Second
 
+	if a.config.Kubernetes {
+		serfConfig.ReconnectTimeout = 5 * time.Second
+	}
+
 	// Create a channel to listen for events from Serf
 	a.eventCh = make(chan serf.Event, 2048)
 	serfConfig.EventCh = a.eventCh
