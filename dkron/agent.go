@@ -22,10 +22,10 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/memberlist"
 	"github.com/hashicorp/raft"
-	raftboltdb "github.com/hashicorp/raft-boltdb"
 	"github.com/hashicorp/serf/serf"
 	"github.com/sirupsen/logrus"
 	"github.com/soheilhy/cmux"
+	raftfastlog "github.com/tidwall/raft-fastlog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -93,7 +93,7 @@ type Agent struct {
 	// raftLayer provides network layering of the raft RPC along with
 	// the Dkron gRPC transport layer.
 	raftLayer     *RaftLayer
-	raftStore     *raftboltdb.BoltStore
+	raftStore     *raftfastlog.FastLogStore
 	raftInmem     *raft.InmemStore
 	raftTransport *raft.NetworkTransport
 
@@ -330,8 +330,8 @@ func (a *Agent) setupRaft() error {
 			return fmt.Errorf("file snapshot store: %s", err)
 		}
 
-		// Create the BoltDB backend
-		s, err := raftboltdb.NewBoltStore(filepath.Join(a.config.DataDir, "raft", "raft.db"))
+		// Create the Raft store
+		s, err := raftfastlog.NewFastLogStore(filepath.Join(a.config.DataDir, "raft", "raft.db"), raftfastlog.Level(a.config.RaftDuration), a.logger.Writer())
 		if err != nil {
 			return fmt.Errorf("error creating new raft store: %s", err)
 		}
