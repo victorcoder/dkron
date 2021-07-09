@@ -245,7 +245,10 @@ func (a *Agent) Stop() error {
 	a.logger.Info("agent: Called member stop, now stopping")
 
 	if a.config.Server {
-		a.raft.Shutdown()
+		shutdownFuture := a.raft.Shutdown()
+		if err := shutdownFuture.Error(); err != nil {
+			a.logger.Errorf("raft shutdown error: %v", err)
+		}
 		a.Store.Shutdown()
 	}
 
